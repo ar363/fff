@@ -1,0 +1,6 @@
+venv/
+db.sqlite3
+*.apkg
+*.pdf
+temp/
+__pycache__/

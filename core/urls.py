@@ -7,4 +7,5 @@ urlpatterns = [
     path("save-pts", views.save_pts),
     path("clrsave-pts", views.clrsave_pts),
     path("get-pts/<int:bookid>/<int:pageid>/", views.get_pts),
+    path("sugg_pts/<int:book_id>/<int:page_no>/", views.sugg_pts),
 ]

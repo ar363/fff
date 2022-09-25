@@ -82,7 +82,7 @@ lt.promise.then((pdf) => {
                 }
 
                 if (mode === 'X') {
-                    if (e.target.classList.contains('gcur') || e.target.classList.contains('gcur-pre'))
+                    if (e.target.classList.contains('gcur') || e.target.classList.contains('gcur-pre') || e.target.classList.contains('gcur-sugg'))
                         e.target.parentElement.removeChild(e.target)
                 }
             })
@@ -156,30 +156,6 @@ function saveNextPage() {
 
 }
 
-
-// document.getElementById('resave').addEventListener('click', () => {
-//     fetch('/clrsave-pts', {
-//         method: 'post',
-//         body: JSON.stringify({
-//             id: parseInt(bookId),
-//             page: pageNo,
-//             pts: pts
-//         }),
-//         headers: {
-//             'content-type': 'application/json'
-//         }
-//     }).then(f => f.json()).then(r => {
-//         if (r.ok) {
-//             window.location.reload()
-//         }
-//     })
-
-// })
-
-function addDeleteButtons(cw, pt) {
-
-}
-
 function activateDeleteMode() {
     mode = 'X'
 
@@ -188,6 +164,10 @@ function activateDeleteMode() {
         e.style.opacity = '0.5'
     })
     document.querySelectorAll('.gcur-pre').forEach(e => {
+        e.style.height = '12px'
+        e.style.opacity = '0.5'
+    })
+    document.querySelectorAll('.gcur-sugg').forEach(e => {
         e.style.height = '12px'
         e.style.opacity = '0.5'
     })
@@ -205,5 +185,30 @@ function activateWriteMode() {
         e.style.height = '2px'
         e.style.opacity = '1'
     })
+    document.querySelectorAll('.gcur-sugg').forEach(e => {
+        e.style.height = '2px'
+        e.style.opacity = '1'
+    })
+}
+
+function addSuggestedLines() {
+    let sgel = document.getElementById('sugg')
+    sgel.parentElement.removeChild(sgel)
+
+    fetch(`/sugg_pts/${bookId}/${pageNo}/`)
+        .then(res => res.json())
+        .then(data => {
+            let cw = document.getElementById('cwrap')
+            data.pts.forEach(pt => {
+                let pty = parseFloat((pt * cwh / 100).toFixed(4))
+
+                let c = document.createElement('div')
+                c.classList.add('gcur-sugg')
+                c.style.top = pty + 'px'
+                pts.push(pt)
+                cw.appendChild(c)
+            })
+        })
+
 }
 

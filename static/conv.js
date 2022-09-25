@@ -51,83 +51,90 @@ lt.promise.then((pdf) => {
             transform: transform,
             viewport: viewport
         };
-        page.render(renderContext);
+        page.render(renderContext).promise.then(() => {
+            fetch(`/get-pts/${bookId}/${pageNo}`).then(res => res.json()).then(ptsRes => {
+                ptsRes.pts.forEach(pt => {
+                    let pty = parseFloat((pt * cwh / 100).toFixed(4))
 
-        fetch(`/get-pts/${bookId}/${pageNo}`).then(res => res.json()).then(ptsRes => {
-            ptsRes.pts.forEach(pt => {
-                let pty = parseFloat((pt * cwh / 100).toFixed(4))
-
-                let c = document.createElement('div')
-                c.classList.add('gcur-pre')
-                c.style.top = pty + 'px'
-                pts.push(pt)
-                cw.appendChild(c)
-            })
-
-
-
-            cw.addEventListener('click', (e) => {
-                if (mode === 'W') {
                     let c = document.createElement('div')
-                    c.classList.add('gcur')
-                    c.style.top = e.offsetY + 'px'
+                    c.classList.add('gcur-pre')
+                    c.style.top = pty + 'px'
+                    pts.push(pt)
                     cw.appendChild(c)
+                })
 
-                    pts.push(parseFloat((e.offsetY / cwh * 100).toFixed(3)))
-                    hist.past.push({
-                        action: 'ADD_LINE',
-                        vals: [e.offsetY]
-                    })
-                    hist.future = []
-                }
 
-                if (mode === 'X') {
-                    if (e.target.classList.contains('gcur') || e.target.classList.contains('gcur-pre') || e.target.classList.contains('gcur-sugg'))
-                        e.target.parentElement.removeChild(e.target)
-                }
+
+                cw.addEventListener('click', (e) => {
+                    if (mode === 'W') {
+                        let c = document.createElement('div')
+                        c.classList.add('gcur')
+                        c.style.top = e.offsetY + 'px'
+                        cw.appendChild(c)
+
+                        pts.push(parseFloat((e.offsetY / cwh * 100).toFixed(3)))
+                        hist.past.push({
+                            action: 'ADD_LINE',
+                            vals: [e.offsetY]
+                        })
+                        hist.future = []
+                    }
+
+                    if (mode === 'X') {
+                        if (e.target.classList.contains('gcur') || e.target.classList.contains('gcur-pre') || e.target.classList.contains('gcur-sugg')) {
+                            console.log(e.target)
+                            pts = pts.filter(xe => Math.round(xe) !== Math.round(parseFloat((parseFloat(e.target.style.top.replace('px', '')) / cwh * 100).toFixed(3))))
+                            e.target.parentElement.removeChild(e.target)
+                        }
+                    }
+                })
+
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'w') activateWriteMode()
+                    if (event.key === 'x') activateDeleteMode()
+
+                    if (event.ctrlKey && event.key === 'z') {
+
+                        let l_ac = hist.past.pop()
+
+                        if (l_ac !== undefined) {
+
+
+                            if (l_ac.action === 'ADD_LINE') {
+                                removeLine(cw, l_ac.vals[0])
+                                pts = pts.filter(e => Math.round(e) !== Math.round(parseFloat((l_ac.vals[0] / cwh * 100).toFixed(3))))
+                            }
+
+                            hist.future.push(l_ac)
+                        }
+
+
+                    }
+                    if (event.ctrlKey && event.key === 'y') {
+                        let f_ac = hist.future.pop()
+
+                        if (f_ac !== undefined) {
+
+                            if (f_ac.action === 'ADD_LINE') {
+                                addLine(cw, f_ac.vals[0])
+                                pts.push(parseFloat((f_ac.vals[0] / cwh * 100).toFixed(3)))
+                            }
+
+                            hist.past.push(f_ac)
+                        }
+                    }
+                    if (event.ctrlKey && event.key === 's') {
+                        event.preventDefault()
+                        saveNextPage()
+                    }
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    if (e.key === 'x') activateWriteMode()
+                })
+
             })
-
-            document.addEventListener('keydown', function (event) {
-                if (event.key === 'w') activateWriteMode()
-                if (event.key === 'x') activateDeleteMode()
-
-                if (event.ctrlKey && event.key === 'z') {
-
-                    let l_ac = hist.past.pop()
-
-                    if (l_ac !== undefined) {
-
-
-                        if (l_ac.action === 'ADD_LINE') {
-                            removeLine(cw, l_ac.vals[0])
-                            pts = pts.filter(e => e !== parseFloat((l_ac.vals[0] / cwh * 100).toFixed(3)))
-                        }
-
-                        hist.future.push(l_ac)
-                    }
-
-
-                }
-                if (event.ctrlKey && event.key === 'y') {
-                    let f_ac = hist.future.pop()
-
-                    if (f_ac !== undefined) {
-
-                        if (f_ac.action === 'ADD_LINE') {
-                            addLine(cw, f_ac.vals[0])
-                            pts.push(parseFloat((f_ac.vals[0] / cwh * 100).toFixed(3)))
-                        }
-
-                        hist.past.push(f_ac)
-                    }
-                }
-                if (event.ctrlKey && event.key === 's') {
-                    event.preventDefault()
-                    saveNextPage()
-                }
-            });
-
-        })
+        });
 
     })
 })
@@ -211,4 +218,3 @@ function addSuggestedLines() {
         })
 
 }
-

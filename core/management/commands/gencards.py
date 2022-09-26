@@ -108,14 +108,18 @@ def mkanki(bookId, book_unique_codename):
     ddeck = genanki.Deck(int(time()), name=Book.objects.get(id=bookId).name)
 
     ld = os.listdir(f"temp/{book_unique_codename}/")
-
+    if len(ld) % 2 != 0:
+        print("WARNING: odd number of cards found")
     for i in range(0, len(ld), 2):
-        ddeck.add_note(
-            genanki.Note(
-                model=genanki.BASIC_MODEL,
-                fields=[f'<img src="{ld[i]}">', f'<img src="{ld[i+1]}">'],
+        try:
+            ddeck.add_note(
+                genanki.Note(
+                    model=genanki.BASIC_MODEL,
+                    fields=[f'<img src="{ld[i]}">', f'<img src="{ld[i+1]}">'],
+                )
             )
-        )
+        except IndexError:
+            pass
 
     pkg = genanki.Package()
     pkg.media_files = [f"temp/{book_unique_codename}/" + i for i in os.listdir(f"temp/{book_unique_codename}/")]

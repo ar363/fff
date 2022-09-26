@@ -27,6 +27,7 @@ class Command(BaseCommand):
 
         for i in range(1, page_count + 1):
             pts = sugg_b_pts(book, i)
+            pts = list(set(pts))
 
             BookPoint.objects.bulk_create(
                 [BookPoint(book=book, page=i, h=pt) for pt in pts]

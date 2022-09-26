@@ -21,7 +21,7 @@ class Book(models.Model):
 class BookPoint(models.Model):
     book = models.ForeignKey(Book, on_delete=models.SET_NULL, null=True)
     page = models.PositiveIntegerField()
-    h = models.FloatField()
+    h = models.FloatField(unique=True)
 
     def __str__(self) -> str:
         return self.book.name + " - " + str(self.page) + ": " + str(self.h)

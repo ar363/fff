@@ -1,3 +1,4 @@
+from sqlite3 import IntegrityError
 from django.shortcuts import render, get_object_or_404
 from django.http.response import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -60,9 +61,12 @@ def clrsave_pts(request):
     BookPoint.objects.filter(book=Book.objects.get(id=j["id"]), page=j["page"]).delete()
 
     for pt in j["pts"]:
-        BookPoint.objects.create(
-            book=Book.objects.get(id=j["id"]), page=j["page"], h=pt
-        )
+        try:
+            BookPoint.objects.create(
+                book=Book.objects.get(id=j["id"]), page=j["page"], h=pt
+            )
+        except IntegrityError as e:
+            pass
 
     return JsonResponse({"ok": 1})
 

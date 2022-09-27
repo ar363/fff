@@ -119,6 +119,7 @@ def sugg_b_pts(book, page_no):
         prevpx = px
 
     bls = [(i * 100 / h) for i in bls if i < BOT and i > TOP]
+    bls = list(set(bls))
 
     pza = p.crop((140, 0, 200, h))
     pza_cv = np.array(pza)
@@ -130,6 +131,7 @@ def sugg_b_pts(book, page_no):
     ansY, _ = np.where(pza_tpl >= 0.8)
     ansY = ansY.tolist()
     ansY = [(i * 100 / h) for i in ansY]
+    ansY = list(set(ansY))
 
     return [*ansY, *bls]
 

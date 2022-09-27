@@ -15,13 +15,13 @@ class Command(BaseCommand):
     help = "Gen cards"
 
     def add_arguments(self, parser):
-        parser.add_argument('book_id', type=int)
-        parser.add_argument('book_unique_codename', type=str)
+        parser.add_argument("book_id", type=int)
+        parser.add_argument("book_unique_codename", type=str)
 
     def handle(self, *args, **options):
-        book_unique_codename = options['book_unique_codename']
-        mkcards(options['book_id'], book_unique_codename)
-        mkanki(options['book_id'], book_unique_codename)
+        book_unique_codename = options["book_unique_codename"]
+        mkcards(options["book_id"], book_unique_codename)
+        mkanki(options["book_id"], book_unique_codename)
         self.stdout.write(self.style.SUCCESS("done!"))
 
 
@@ -47,9 +47,8 @@ def mkcards(bookId, book_unique_codename):
 
     pdf = book.pdf
 
-    os.makedirs('temp', exist_ok=True)
-    os.makedirs(f'temp/{book_unique_codename}', exist_ok=True)
-
+    os.makedirs("temp", exist_ok=True)
+    os.makedirs(f"temp/{book_unique_codename}", exist_ok=True)
 
     glob_name_sys = 1
     for i in range(len(coords) - 1):
@@ -61,9 +60,10 @@ def mkcards(bookId, book_unique_codename):
 
             w, h = im.size
             im = im.crop((0, (ia["h"] * h / 100), w, (ib["h"] * h / 100)))
-            
 
-            im.save(f"temp/{book_unique_codename}/{book_unique_codename}-{str(glob_name_sys).zfill(4)}-p{ia['page']}.jpg")
+            im.save(
+                f"temp/{book_unique_codename}/{book_unique_codename}-{str(glob_name_sys).zfill(4)}-p{ia['page']}.jpg"
+            )
         else:
             ims = []
             stw = 0
@@ -73,11 +73,15 @@ def mkcards(bookId, book_unique_codename):
                 w, h = im.size
                 stw = w
 
-                if book.type in ['A', 'B']:
+                if book.type in ["A", "B"]:
                     if j == ia["page"]:
-                        ims.append(im.crop((0, (ia["h"] * h / 100), w, (BOTTOM * h / 100))))
+                        ims.append(
+                            im.crop((0, (ia["h"] * h / 100), w, (BOTTOM * h / 100)))
+                        )
                     elif j == ib["page"]:
-                        ims.append(im.crop((0, (TOP * h / 100), w, (ib["h"] * h / 100))))
+                        ims.append(
+                            im.crop((0, (TOP * h / 100), w, (ib["h"] * h / 100)))
+                        )
                     else:
                         ims.append(im.crop((0, (TOP * h / 100), w, (BOTTOM * h / 100))))
                 else:
@@ -99,9 +103,12 @@ def mkcards(bookId, book_unique_codename):
                 lg_im.paste(ims[i], (0, calc_total_h))
                 calc_total_h += ims[i].size[1]
 
-            lg_im.save(f"temp/{book_unique_codename}/{book_unique_codename}-{str(glob_name_sys).zfill(4)}-p{ia['page']}.jpg")
+            lg_im.save(
+                f"temp/{book_unique_codename}/{book_unique_codename}-{str(glob_name_sys).zfill(4)}-p{ia['page']}.jpg"
+            )
 
         glob_name_sys += 1
+
 
 def mkanki(bookId, book_unique_codename):
 
@@ -122,7 +129,10 @@ def mkanki(bookId, book_unique_codename):
             pass
 
     pkg = genanki.Package()
-    pkg.media_files = [f"temp/{book_unique_codename}/" + i for i in os.listdir(f"temp/{book_unique_codename}/")]
+    pkg.media_files = [
+        f"temp/{book_unique_codename}/" + i
+        for i in os.listdir(f"temp/{book_unique_codename}/")
+    ]
 
     pkg.decks = [ddeck]
 

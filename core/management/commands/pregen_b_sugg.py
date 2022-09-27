@@ -25,11 +25,13 @@ class Command(BaseCommand):
         page_count = o.page_count
         o.close()
 
+        tlen_pts = 0
         for i in range(1, page_count + 1):
             pts = sugg_b_pts(book, i)
-
+            tlen_pts += len(pts)
+            
             BookPoint.objects.bulk_create(
                 [BookPoint(book=book, page=i, h=pt) for pt in pts]
             )
 
-        self.stdout.write(self.style.SUCCESS("done!"))
+        self.stdout.write(self.style.SUCCESS(f"done! generated {tlen_pts} pts"))

@@ -135,11 +135,64 @@ def sugg_b_pts(book, page_no):
 
     return [*ansY, *bls]
 
+def sugg_a_pts(book, page_no):
+    TOP = 100
+    BOT = 1490
+
+    p = page_img(book.pdf, page_no)
+
+    w, h = p.size
+    pzq = p.crop((107, 0, 135, h)).filter(ImageFilter.MinFilter(27))
+
+    pzw, pzh = pzq.size
+
+    bls = []
+
+    prevpx = (255, 255, 255)
+    for i in range(pzh):
+        px = pzq.getpixel((int(pzw / 2), i))
+        if px == (0, 0, 0) and prevpx != (0, 0, 0):
+            mod_i = i
+            allwhite = False
+            while not allwhite:
+                pwc = p.crop((0, mod_i, w, mod_i + 1))
+                if pwc.convert("L").getextrema()[0] > 127:
+                    allwhite = True
+                else:
+                    mod_i -= 1
+
+            bls.append(mod_i)
+
+        prevpx = px
+
+    bls = [(i * 100 / h) for i in bls if i < BOT and i > TOP]
+    bls = list(set(bls))
+
+    pza = p.crop((140, 0, 235, h))
+    pza_cv = np.array(pza)
+    pza_cv = pza_cv[:, :, ::-1].copy()
+
+    tpl_im = cv2.imread("sol.png")
+
+    pza_tpl = cv2.matchTemplate(pza_cv, tpl_im, cv2.TM_CCOEFF_NORMED)
+    ansY, _ = np.where(pza_tpl >= 0.8)
+    
+    ansY = np.delete(ansY, np.argwhere(np.ediff1d(ansY) <= 10) + 1)
+
+    ansY = ansY.tolist()
+    ansY = [(i * 100 / h) for i in ansY]
+    ansY = list(set(ansY))
+
+    return [*ansY, *bls]
+
 
 def sugg_pts(request, book_id, page_no):
     book = get_object_or_404(Book, id=book_id)
     if book.type == "B":
         pts = sugg_b_pts(book, page_no)
+        return JsonResponse({"pts": pts})
+    if book.type == "A":
+        pts = sugg_a_pts(book, page_no)
         return JsonResponse({"pts": pts})
     else:
         return JsonResponse({"pts": ""})

@@ -39,7 +39,7 @@ class Command(BaseCommand):
                     #     lns.append(math.floor(t['bbox'][3]) + 1)
                     # else:
                     lns.append(math.floor(t['bbox'][1]) - 1)
-                    lns.append(math.floor(t['bbox'][3]) + 1)
+                    lns.append(math.floor(t['lines'][0]['bbox'][3]) + 1)
 
                     # prev_blk = True
                 # else:

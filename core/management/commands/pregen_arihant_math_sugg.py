@@ -43,6 +43,7 @@ class Command(BaseCommand):
                         "Akzidenz-GroteskBQ",
                         "LiberationSans-Bold",
                         "Akzidenz-GroteskBQLight",
+                        "Akzidenz-GroteskBQLight-",
                     ]
                 ):
                     # if prev_blk == True:

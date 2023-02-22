@@ -9,6 +9,7 @@ class Book(models.Model):
         choices=[
             ("A", "A module"),
             ("B", "B module"),
+            ("R", "Arihant handbook"),
             ("O", "Other"),
         ],
         default="O",

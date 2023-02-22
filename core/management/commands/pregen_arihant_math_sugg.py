@@ -47,7 +47,7 @@ class Command(BaseCommand):
             
             BookPoint.objects.bulk_create(
                 [BookPoint(book=book, page=page.number + 1, h=pt*100/h) for pt in lns]
-            )
+            , ignore_conflicts=True)
             leng += len(lns)
 
         o.close()            

@@ -33,7 +33,7 @@ class Command(BaseCommand):
 
             for t in tx['blocks']:
 
-                if t['lines'][0]['spans'][0]['font'] in ['Akzidenz-GroteskBQ-Bold', 'Akzidenz-GroteskBQ', 'LiberationSans-Bold']:
+                if 'lines' in t and len(t['lines']) > 0 and t['lines'][0]['spans'][0]['font'] in ['Akzidenz-GroteskBQ-Bold', 'Akzidenz-GroteskBQ', 'LiberationSans-Bold']:
                     if prev_blk == True:
                         lns.pop()
                         lns.append(math.floor(t['bbox'][3]) + 1)

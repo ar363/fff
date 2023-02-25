@@ -1,6 +1,6 @@
 from sqlite3 import IntegrityError
 from django.shortcuts import render, get_object_or_404
-from django.http.response import JsonResponse
+from django.http.response import JsonResponse, FileResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import Http404
@@ -8,7 +8,7 @@ from django.http import Http404
 from core.models import Book, BookPoint
 
 import fitz
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageDraw
 import numpy as np
 import cv2
 
@@ -85,7 +85,24 @@ def page_img(pdf, page):
     pg = p.load_page(page - 1)
     pix = pg.get_pixmap(matrix=mat)
     img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+    p.close()
     return img
+
+
+def page_img_sm(pdf, page):
+    p = fitz.open(pdf)
+    pg = p.load_page(page - 1)
+    pix = pg.get_pixmap(dpi=80)
+    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+    p.close()
+    return img
+
+
+def pdf_pgct(pdf):
+    p = fitz.open(pdf)
+    ct = p.page_count
+    p.close()
+    return ct
 
 
 def sugg_b_pts(book, page_no):
@@ -135,6 +152,7 @@ def sugg_b_pts(book, page_no):
 
     return [*ansY, *bls]
 
+
 def sugg_a_pts(book, page_no):
     TOP = 100
     BOT = 1490
@@ -176,7 +194,7 @@ def sugg_a_pts(book, page_no):
 
     pza_tpl = cv2.matchTemplate(pza_cv, tpl_im, cv2.TM_CCOEFF_NORMED)
     ansY, _ = np.where(pza_tpl >= 0.8)
-    
+
     ansY = np.delete(ansY, np.argwhere(np.ediff1d(ansY) <= 10) + 1)
 
     ansY = ansY.tolist()
@@ -196,3 +214,67 @@ def sugg_pts(request, book_id, page_no):
         return JsonResponse({"pts": pts})
     else:
         return JsonResponse({"pts": ""})
+
+
+import time
+from io import BytesIO
+
+
+def page_img_preview(request, book_id, page_no):
+
+    pdf_book = get_object_or_404(Book, id=book_id)
+
+    coords = (
+        BookPoint.objects.filter(book=pdf_book, page=page_no)
+        .order_by("page", "h")
+        .values("page", "h")
+    )
+
+    img = page_img_sm(pdf_book.pdf, page_no)
+    w, h = img.size
+    pd = ImageDraw.Draw(img)
+    prev_icord = None
+    for i, c in enumerate(coords):
+        if not prev_icord:
+            prev_icord = c["h"]
+            continue
+
+        if i % 2 == 0:
+            rfill = (0, 210, 0)
+        else:
+            rfill = (255, 0, 0)
+        pd.rectangle(
+            [
+                (0, prev_icord * h / 100),
+                (w, c["h"] * h / 100),
+            ],
+            outline=rfill,
+            width=5,
+        )
+        prev_icord = c["h"]
+
+    buf = BytesIO()
+    img.save(buf, "PNG")
+
+    resp = HttpResponse(buf.getvalue(), content_type="image/png")
+    return resp
+
+
+def preview_inf_scroll(request, book_id):
+    pdf_book = get_object_or_404(Book, id=book_id)
+    book_pg_ct = pdf_pgct(pdf_book.pdf)
+
+    return render(
+        request,
+        "core/inf.html",
+        {
+            "book": pdf_book,
+            "hydrate": {
+                "book": {
+                    "name": pdf_book.name,
+                    "id": pdf_book.id,
+                    "total_pages": book_pg_ct,
+                },
+            },
+        },
+    )
